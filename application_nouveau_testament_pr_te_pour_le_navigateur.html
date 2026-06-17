@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testamentum - Explorateur du Nouveau Testament</title>
+    
+    <!-- Intégration de Tailwind CSS pour un design magnifique -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Intégration de React et Babel pour faire tourner l'application directement dans le navigateur -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Style personnalisé pour les polices et transitions -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .font-serif-ancient {
+            font-family: 'Cinzel', serif;
+        }
+    </style>
+</head>
+<body class="bg-stone-900 text-stone-100 min-h-screen">
+
+    <div id="root"></div>
+
+    <!-- CODE APPLICATION REACT AVEC BABEL -->
+    <script type="text/transform-jsx" data-presets="react">
+        const { useState, useEffect } = React;
+
+        // --- DONNÉES DU NOUVEAU TESTAMENT (27 Livres, Résumés et Versets Clés) ---
+        const NT_BOOKS = [
+          { 
+            id: 'matthew', 
+            name: 'Matthieu', nameNl: 'Matteüs',
+            category: 'Évangiles', categoryNl: 'Evangeliën',
+            chapters: 28, totalVerses: 1071, author: 'Matthieu', authorNl: 'Matteüs', date: '60-70 ap. J.-C.', dateNl: '60-70 n.Chr.',
+            theme: 'Jésus le Roi Messie, accomplissement des prophéties',
+            themeNl: 'Jezus de Messiaanse Koning, vervulling van de profetieën',
+            summaryFr: "Cet Évangile présente Jésus comme le Messie promis dans l'Ancien Testament. Écrit principalement pour un public juif, il souligne comment Jésus accomplit les prophéties et établit le Royaume des Cieux.",
+            summaryNl: "Dit Evangelie presenteert Jezus als de beloofde Messias uit het Oude Testament. Het is voornamelijk geschreven voor een Joods publiek en benadrukt hoe Jezus de profetieën vervult en het Koninkrijk der Hemelen vestigt.",
+            keyVerses: [
+              { ref: "1:23", text: "Voici, la vierge sera enceinte, elle enfantera un fils, et on lui donnera le nom d'Emmanuel, ce qui signifie Dieu avec nous.", textNl: "Zie, de maagd zal zwanger worden en een Zoon baren, en u zult Hem de Naam Immanuel geven; vertaald betekent dat: God met ons." },
+              { ref: "28:19", text: "Allez, faites de toutes les nations des disciples, les baptisant au nom du Père, du Fils et du Saint-Esprit.", textNl: "Ga dan heen, onderwijs al de volken, hen dopend in de Naam van de Vader en van de Zoon en van de Heilige Geest." }
+            ]
+          },
+          { 
+            id: 'mark', 
+            name: 'Marc', nameNl: 'Marcus',
+            category: 'Évangiles', categoryNl: 'Evangeliën',
+            chapters: 16, totalVerses: 678, author: 'Marc', authorNl: 'Marcus', date: '50-60 ap. J.-C.', dateNl: '50-60 n.Chr.',
+            theme: 'Jésus le Serviteur Souffrant et Fils de Dieu',
+            themeNl: 'Jezus de Lijdende Dienaar en Zoon van God',
+            summaryFr: "L'Évangile le plus court et le plus dynamique. Marc dépeint Jésus en action, accomplissant des miracles et marchant résolument vers la croix comme le Serviteur qui donne sa vie pour la multitude.",
+            summaryNl: "Het kortste en meest dynamische Evangelie. Marcus schildert Jezus in actie, terwijl Hij wonderen verricht en vastberaden naar het kruis wandelt als de Dienaar Die Zijn leven geeft voor velen.",
+            keyVerses: [
+              { ref: "10:45", text: "Car le Fils de l'homme est venu, non pour être servi, mais pour servir et donner sa vie comme la rançon de plusieurs.", textNl: "Want ook de Zoon des mensen is niet gekomen om gediend te worden, maar om te dienen, en Zijn leven te geven als losprijs voor velen." }
+            ]
+          },
+          { 
+            id: 'luke', 
+            name: 'Luc', nameNl: 'Lucas',
+            category: 'Évangiles', categoryNl: 'Evangeliën',
+            chapters: 24, totalVerses: 1151, author: 'Luc', authorNl: 'Lucas', date: '60-63 ap. J.-C.', dateNl: '60-63 n.Chr.',
+            theme: 'Jésus le Sauveur Parfait de l’humanité',
+            themeNl: 'Jezus de Volmaakte Redder van de mensheid',
+            summaryFr: "Rédigé par un médecin avec un grand souci du détail historique, cet Évangile met en lumière la compassion de Jésus pour les exclus, les pauvres, les femmes et les pécheurs.",
+            summaryNl: "Geschreven door een arts met veel aandacht voor historisch detail. Dit Evangelie belicht Jezus' mededogen met buitenstaanders, armen, vrouwen en zondaars.",
+            keyVerses: [
+              { ref: "19:10", text: "Car le Fils de l'homme est venu chercher et sauver ce qui était perdu.", textNl: "Want de Zoon des mensen is gekomen om te zoeken en zalig te maken wat verloren was." }
+            ]
+          },
+          { 
+            id: 'john', 
+            name: 'Jean', nameNl: 'Johannes',
+            category: 'Évangiles', categoryNl: 'Evangeliën',
+            chapters: 21, totalVerses: 879, author: 'Jean', authorNl: 'Johannes', date: '85-90 ap. J.-C.', dateNl: '85-90 n.Chr.',
+            theme: 'Jésus le Verbe divin, le Fils de Dieu incarné',
+            themeNl: 'Jezus het goddelijke Woord, de geïncarneerde Zoon van God',
+            summaryFr: "Profondément spirituel et théologique, Jean présente Jésus comme la Parole éternelle faite chair. Il insiste sur la foi en Lui pour obtenir la vie éternelle.",
+            summaryNl: "Diep spiritueel en theologisch. Johannes presenteert Jezus als het eeuwige Woord dat vlees is geworden. Hij benadrukt het geloof in Hem om eeuwig leven te verkrijgen.",
+            keyVerses: [
+              { ref: "1:1", text: "Au commencement était la Parole, et la Parole était avec Dieu, et la Parole était Dieu.", textNl: "In het begin was het Woord en het Woord was bij God en het Woord was God." },
+              { ref: "3:16", text: "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse point, mais qu'il ait la vie éternelle.", textNl: "Want zo lief heeft God de wereld gehad, dat Hij Zijn eniggeboren Zoon gegeven heeft, opdat ieder die in Hem gelooft, niet verloren gaat, maar eeuwig leven heeft." }
+            ]
+          },
+          { 
+            id: 'acts', 
+            name: 'Actes', nameNl: 'Handelingen',
+            category: 'Histoire', categoryNl: 'Geschiedenis',
+            chapters: 28, totalVerses: 1007, author: 'Luc', authorNl: 'Lucas', date: '61-63 ap. J.-C.', dateNl: '61-63 n.Chr.',
+            theme: 'L’expansion de l’Église par le Saint-Esprit',
+            themeNl: 'De uitbreiding van de Kerk door de Heilige Geest',
+            summaryFr: "Faisant suite à l'Évangile de Luc, ce livre raconte la naissance de l'Église primitive à la Pentecôte et sa propagation spectaculaire sous l'impulsion du Saint-Esprit, de Jérusalem jusqu'à Rome.",
+            summaryNl: "Als vervolg op het Evangelie van Lucas vertelt dit boek over het ontstaan van de vroege Kerk op Pinksteren en de spectaculaire verspreiding ervan onder leiding van de Heilige Geest, van Jeruzalem tot Rome.",
+            keyVerses: [
+              { ref: "1:8", text: "Mais vous recevrez une puissance, le Saint-Esprit survenant sur vous, et vous serez mes témoins à Jérusalem, dans toute la Judée, dans la Samarie, et jusqu'aux extrémités de la terre.", textNl: "Maar u zult de kracht van de Heilige Geest ontvangen, Die over u komen zal; en u zult Mijn getuigen zijn, zowel in Jeruzalem als in heel Judea en Samaria en tot aan het uiterste van de aarde." }
+            ]
+          },
+          { 
+            id: 'romans', 
+            name: 'Romains', nameNl: 'Romeinen',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 16, totalVerses: 433, author: 'Paul', authorNl: 'Paulus', date: '57 ap. J.-C.', dateNl: '57 n.Chr.',
+            theme: 'La justification par la foi et la justice de Dieu',
+            themeNl: 'Rechtvaardiging door geloof en de gerechtigheid van God',
+            summaryFr: "Le chef-d'œuvre théologique de Paul. Il y explique comment tous les êtres humains ont péché, mais sont gratuitement déclarés justes par Dieu par le moyen de la foi en Jésus-Christ.",
+            summaryNl: "Het theologische meesterwerk van Paulus. Hij legt uit hoe alle mensen hebben gezondigd, maar om niet rechtvaardig worden verklaard door God door middel van het geloof in Jezus Christus.",
+            keyVerses: [
+              { ref: "3:23", text: "Car tous ont péché et sont privés de la gloire de Dieu.", textNl: "Want allen hebben gezondigd en missen de heerlijkheid van God." },
+              { ref: "8:28", text: "Nous savons, du reste, que toutes choses concourent au bien de ceux qui aiment Dieu, de ceux qui sont appelés selon son dessein.", textNl: "En wij weten dat voor hen die God liefhebben, alle dingen meewerken ten goede." }
+            ]
+          },
+          { 
+            id: '1corinthians', 
+            name: '1 Corinthiens', nameNl: '1 Korintiërs',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 16, totalVerses: 437, author: 'Paul', authorNl: 'Paulus', date: '55 ap. J.-C.', dateNl: '55 n.Chr.',
+            theme: 'La correction des désordres ecclésiastiques et l’amour chrétien',
+            themeNl: 'Het corrigeren van wanorde in de gemeente en de christelijke liefde',
+            summaryFr: "Paul répond aux problèmes d'une Église jeune mais divisée : rivalités, questions éthiques et abus spirituels. Il y livre le magnifique hymne à l'amour chrétien au chapitre 13.",
+            summaryNl: "Paulus reageert op de problemen van een jonge maar verdeelde kerk: rivaliteit, ethische kwesties en geestelijk misbruik. Het bevat de prachtige hymne over de christelijke liefde in hoofdstuk 13.",
+            keyVerses: [
+              { ref: "13:13", text: "Maintenant donc ces trois choses demeurent: la foi, l'espérance, l'amour; mais la plus grande de ces choses, c'est l'amour.", textNl: "En nu blijven geloof, hoop en liefde, deze drie, maar de meeste van deze is de liefde." }
+            ]
+          },
+          { 
+            id: '2corinthians', 
+            name: '2 Corinthiens', nameNl: '2 Korintiërs',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 13, totalVerses: 257, author: 'Paul', authorNl: 'Paulus', date: '56 ap. J.-C.', dateNl: '56 n.Chr.',
+            theme: 'La défense du ministère apostolique de Paul',
+            themeNl: 'De verdediging van Paulus\' apostolische bediening',
+            summaryFr: "Une lettre très personnelle où Paul ouvre son cœur. Il y défend son autorité d'apôtre contre de faux enseignants et explique que la force de Dieu s'accomplit dans notre faiblesse.",
+            summaryNl: "Een zeer persoonlijke brief waarin Paulus zijn hart opent. Hij verdedigt zijn apostolische gezag tegen dwaalleraars en legt uit dat Gods kracht zich in onze zwakheid voltrekt.",
+            keyVerses: [
+              { ref: "12:9", text: "Ma grâce te suffit, car ma puissance s'accomplit dans la faiblesse.", textNl: "Mijn genade is voor u genoeg, want Mijn kracht wordt in zwakheid volbracht." }
+            ]
+          },
+          { 
+            id: 'galatians', 
+            name: 'Galates', nameNl: 'Galaten',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 6, totalVerses: 149, author: 'Paul', authorNl: 'Paulus', date: '48 ap. J.-C.', dateNl: '48 n.Chr.',
+            theme: 'La liberté chrétienne face à la Loi',
+            themeNl: 'De christelijke vrijheid tegenover de Wet',
+            summaryFr: "Paul défend avec ferveur la doctrine du salut par la foi seule, sans les œuvres de la Loi juive. C'est la charte de la liberté spirituelle chrétienne.",
+            summaryNl: "Paulus verdedigt vurig de leer van redding door geloof alleen, zonder de werken van de Joodse Wet. Dit is het handvest van christelijke geestelijke vrijheid.",
+            keyVerses: [
+              { ref: "5:22", text: "Mais le fruit de l'Esprit, c'est l'amour, la joie, la paix, la patience, la bonté, la bénignité, la fidélité...", textNl: "De vrucht van de Geest is echter: liefde, blijdschap, vrede, geduld, vriendelijkheid, goedheid, geloof..." }
+            ]
+          },
+          { 
+            id: 'ephesians', 
+            name: 'Éphésiens', nameNl: 'Efeziërs',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 6, totalVerses: 155, author: 'Paul', authorNl: 'Paulus', date: '60-62 ap. J.-C.', dateNl: '60-62 n.Chr.',
+            theme: 'L’Église, corps mystique du Christ',
+            themeNl: 'De Kerk als het mystieke lichaam van Christus',
+            summaryFr: "Paul explore le plan éternel de Dieu pour unir tous les peuples en Christ. Il décrit l'Église comme un temple vivant et invite à revêtir l'armure spirituelle de Dieu.",
+            summaryNl: "Paulus verkent Gods eeuwige plan om alle volkeren in Christus te verenigen. Hij beschrijft de Kerk als een levende tempel en roept op om de geestelijke wapenrusting van God aan te trekken.",
+            keyVerses: [
+              { ref: "2:8", text: "Car c'est par la grâce que vous êtes sauvés, par le moyen de la foi. Et cela ne vient pas de vous, c'est le don de Dieu.", textNl: "Want uit genade bent u zalig geworden, door het geloof, en dat niet uit u, het is de gave van God." }
+            ]
+          },
+          { 
+            id: 'philippians', 
+            name: 'Philippiens', nameNl: 'Filippenzen',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 4, totalVerses: 104, author: 'Paul', authorNl: 'Paulus', date: '60-62 ap. J.-C.', dateNl: '60-62 n.Chr.',
+            theme: 'La joie en Christ malgré l’adversité',
+            themeNl: 'Vreugde in Christus ondanks tegenspoed',
+            summaryFr: "Écrite depuis une cellule de prison, cette lettre rayonne de joie et de gratitude. Paul y encourage l'Église de Philippe à cultiver l'humilité et l'unité fraternelle.",
+            summaryNl: "Geschreven vanuit een gevangeniscel, straalt deze brief van vreugde en dankbaarheid. Paulus moedigt de gemeente in Filippi aan om nederigheid en broederlijke eenheid te cultiveren.",
+            keyVerses: [
+              { ref: "4:13", text: "Je puis tout par celui qui me fortifie.", textNl: "Alle dingen kan ik aan door Christus, Die mij kracht geeft." }
+            ]
+          },
+          { 
+            id: 'colossians', 
+            name: 'Colossiens', nameNl: 'Kolossensen',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 4, totalVerses: 95, author: 'Paul', authorNl: 'Paulus', date: '60-62 ap. J.-C.', dateNl: '60-62 n.Chr.',
+            theme: 'La suprématie absolue et la suffisance de Jésus-Christ',
+            themeNl: 'De absolute suprematie en genoegzaamheid van Jezus Christus',
+            summaryFr: "Paul combat des hérésies qui rabaissaient la divinité de Jésus. Il proclame que le Christ est l'image du Dieu invisible et que tout est pleinement accompli en Lui.",
+            summaryNl: "Paulus bestrijdt dwaalleringen die de goddelijkheid van Jezus ondermijnden. Hij verkondigt dat Christus het beeld is van de onzichtbare God en dat alles in Hem volkomen is.",
+            keyVerses: [
+              { ref: "1:15", text: "Il est l'image du Dieu invisible, le premier-né de toute la création.", textNl: "Hij is het Beeld van de onzichtbare God, de Eerstgeborene de hele schepping." }
+            ]
+          },
+          { 
+            id: '1thessalonians', 
+            name: '1 Thessaloniciens', nameNl: '1 Tessalonicenzen',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 5, totalVerses: 89, author: 'Paul', authorNl: 'Paulus', date: '51 ap. J.-C.', dateNl: '51 n.Chr.',
+            theme: 'La sainteté de vie et le retour du Seigneur',
+            themeNl: 'Heilig leven en de wederkomst van de Heer',
+            summaryFr: "L'une des premières lettres de Paul. Il félicite cette jeune communauté pour sa foi exemplaire et apporte un immense réconfort concernant le retour glorieux de Jésus.",
+            summaryNl: "Een van de vroegste brieven van Paulus. Hij feliciteert deze jonge gemeenschap met hun voorbeeldige geloof en biedt troost over de glorieuze wederkomst van Jezus.",
+            keyVerses: [
+              { ref: "4:16", text: "Car le Seigneur lui-même, à un signal donné, à la voix d'un archange, et au son de la trompette de Dieu, descendra du ciel...", textNl: "Want de Heere Zelf zal met een geroep, met de stem van een aartsengel en met een bazuin van God neerdalen uit de hemel..." }
+            ]
+          },
+          { 
+            id: '2thessalonians', 
+            name: '2 Thessaloniciens', nameNl: '2 Tessalonicenzen',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 3, totalVerses: 47, author: 'Paul', authorNl: 'Paulus', date: '51 ap. J.-C.', dateNl: '51 n.Chr.',
+            theme: 'La clarification sur le Jour du Seigneur',
+            themeNl: 'Verduidelijking over de Dag van de Heer',
+            summaryFr: "Faisant suite à de fausses rumeurs sur le fait que le retour de Jésus aurait déjà eu lieu, Paul clarifie les signes qui doivent précéder cet événement grandiose.",
+            summaryNl: "Naar aanleiding van valse geruchten dat de wederkomst van Jezus al had plaatsgevonden, verduidelijkt Paulus de tekenen die aan deze grootse gebeurtenis vooraf moeten gaan.",
+            keyVerses: [
+              { ref: "3:3", text: "Le Seigneur est fidèle, il vous affermira et vous préservera du malin.", textNl: "Maar de Heere is getrouw, Die u zal versterken en bewaren voor de boze." }
+            ]
+          },
+          { 
+            id: '1timothy', 
+            name: '1 Timothée', nameNl: '1 Timoteüs',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 6, totalVerses: 113, author: 'Paul', authorNl: 'Paulus', date: '62-64 ap. J.-C.', dateNl: '62-64 n.Chr.',
+            theme: 'L’organisation et la saine doctrine dans l’Église locale',
+            themeNl: 'De orde en de gezonde leer in de plaatselijke gemeente',
+            summaryFr: "Paul donne des conseils pratiques à son jeune collaborateur Timothée pour diriger et structurer l'Église d'Éphèse : choix des responsables, prière et saine doctrine.",
+            summaryNl: "Paulus geeft praktische adviezen aan zijn jonge medewerker Timoteüs om de kerk in Efeze te leiden en te structureren: selectie van leiders, gebed en de gezonde leer.",
+            keyVerses: [
+              { ref: "6:10", text: "Car l'amour de l'argent est une racine de tous les maux...", textNl: "Want geldzucht is een wortel van alle kwaad..." }
+            ]
+          },
+          { 
+            id: '2timothy', 
+            name: '2 Timothée', nameNl: '2 Timoteüs',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 4, totalVerses: 83, author: 'Paul', authorNl: 'Paulus', date: '66-67 ap. J.-C.', dateNl: '66-67 n.Chr.',
+            theme: 'L’exhortation à la fidélité pastoral avant la mort',
+            themeNl: 'Aansporing tot pastorale trouw voor de dood',
+            summaryFr: "Le testament spirituel de Paul. Sentant sa mort approcher dans un cachot romain, il exhorte Timothée à persévérer avec courage dans la proclamation de l'Évangile.",
+            summaryNl: "Het geestelijke testament van Paulus. Terwijl hij zijn dood voelt naderen in een Romeinse kerker, spoort hij Timoteüs aan om met moed te volharden in de verkondiging van het Evangelie.",
+            keyVerses: [
+              { ref: "1:7", text: "Car ce n'est pas un esprit de timidité que Dieu nous a donné, mais un esprit de force, d'amour et de sagesse.", textNl: "Want God heeft ons niet gegeven een geest van vreesachtigheid, maar van kracht en liefde en bezonnenheid." }
+            ]
+          },
+          { 
+            id: 'titus', 
+            name: 'Tite', nameNl: 'Titus',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 3, totalVerses: 46, author: 'Paul', authorNl: 'Paulus', date: '62-64 ap. J.-C.', dateNl: '62-64 n.Chr.',
+            theme: 'Le bon comportement dans l’Église et les bonnes œuvres',
+            themeNl: 'Goed gedrag in de gemeente en goede werken',
+            summaryFr: "Paul confie à Tite la tâche d'organiser les Églises sur l'île de Crète. La lettre insiste sur le lien inséparable entre la foi authentique et la pratique des bonnes œuvres.",
+            summaryNl: "Paulus toevertrouwt Titus de taak om de kerken op het eiland Kreta te organiseren. De brief benadrukt de onafscheidelijke band tussen oprecht geloof en het doen van goede werken.",
+            keyVerses: [
+              { ref: "3:5", text: "Il nous a sauvés, non à cause des œuvres de justice que nous aurions faites, mais selon sa miséricorde...", textNl: "Maakte Hij ons zalig, niet op grond van de werken van rechtvaardigheid die wij gedaan hadden, maar overeenkomstig Zijn barmhartigheid..." }
+            ]
+          },
+          { 
+            id: 'philemon', 
+            name: 'Philémon', nameNl: 'Filemon',
+            category: 'Épîtres Pauliniennes', categoryNl: 'Brieven van Paulus',
+            chapters: 1, totalVerses: 25, author: 'Paul', authorNl: 'Paulus', date: '60-62 ap. J.-C.', dateNl: '60-62 n.Chr.',
+            theme: 'La réconciliation fraternelle entre maître et esclave',
+            themeNl: 'Broederlijke verzoening tussen meester en slaaf',
+            summaryFr: "Une courte lettre d'une incroyable beauté éthique. Paul intercède auprès d'un maître chrétien (Philémon) pour qu'il accueille son esclave fugitif (Onésime) non plus comme un esclave, mais comme un frère bien-aimé.",
+            summaryNl: "Een korte brief van een ongelooflijke ethische schoonheid. Paulus bemiddelt bij een christelijke meester (Filemon) om zijn weggelopen slaaf (Onesimus) niet langer als slaaf, maar als geliefde broeder te ontvangen.",
+            keyVerses: [
+              { ref: "1:16", text: "Non plus comme un esclave, mais comme supérieur à un esclave, comme un frère bien-aimé...", textNl: "Nu niet meer als een slaaf, maar meer dan een slaaf: een geliefde broeder..." }
+            ]
+          },
+          { 
+            id: 'hebrews', 
+            name: 'Hébreux', nameNl: 'Hebreeën',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 13, totalVerses: 303, author: 'Anonyme', authorNl: 'Anoniem', date: '67-69 ap. J.-C.', dateNl: '67-69 n.Chr.',
+            theme: 'La supériorité du Christ, grand prêtre de la Nouvelle Alliance',
+            themeNl: 'De superioriteit van Christus, Hogepriester van het Nieuwe Verbond',
+            summaryFr: "Adressée à des chrétiens d'origine juive tentés de retourner aux anciens rites, cette épître démontre de façon magistrale que Jésus est supérieur aux anges, à Moïse et au sacerdoce ancien.",
+            summaryNl: "Gericht aan christenen met een Joodse achtergrond die in de verleiding kwamen terug te keren naar de oude rituelen. Deze brief toont op meesterlijke wijze aan dat Jezus superieur is aan de engelen, Mozes en het oude priesterschap.",
+            keyVerses: [
+              { ref: "11:1", text: "Or la foi est une ferme assurance des choses qu'on espère, une démonstration de celles qu'on ne voit pas.", textNl: "Het geloof nu is een vaste grond van de dingen die men hoopt, en een bewijs van de dingen die men niet ziet." }
+            ]
+          },
+          { 
+            id: 'james', 
+            name: 'Jacques', nameNl: 'Jakobus',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 5, totalVerses: 108, author: 'Jacques le Juste', authorNl: 'Jakobus de Rechtvaardige', date: '45-49 ap. J.-C.', dateNl: '45-49 n.Chr.',
+            theme: 'La foi authentique démontrée par les œuvres',
+            themeNl: 'Oprecht geloof aangetoond door werken',
+            summaryFr: "Une épître très pratique, souvent comparée au livre des Proverbes. Jacques y insiste sur le fait qu'une foi sans actes d'amour concrets est une foi morte.",
+            summaryNl: "Een zeer praktische brief, vaak vergeleken met het boek Spreuken. Jakobus benadrukt dat geloof zonder concrete daden van liefde een dood geloof is.",
+            keyVerses: [
+              { ref: "2:26", text: "Comme le corps sans âme est mort, de même la foi sans les œuvres est morte.", textNl: "Want zoals het lichaam zonder geest dood is, zo is ook het geloof zonder de werken dood." }
+            ]
+          },
+          { 
+            id: '1peter', 
+            name: '1 Pierre', nameNl: '1 Petrus',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 5, totalVerses: 105, author: 'Pierre', authorNl: 'Petrus', date: '63-64 ap. J.-C.', dateNl: '63-64 n.Chr.',
+            theme: 'L’espérance et la persévérance chrétiennes face à la persécution',
+            themeNl: 'Christelijke hoop en volharding te midden van vervolging',
+            summaryFr: "L'apôtre Pierre écrit pour encourager les chrétiens dispersés et persécutés pour leur foi. Il leur rappelle leur identité spirituelle de 'sacerdoce royal' et de peuple saint.",
+            summaryNl: "De apostel Petrus schrijft om christenen te bemoedigen die verspreid en vervolgd worden om hun geloof. Hij herinnert hen aan hun geestelijke identiteit als een 'koninklijk priesterschap'.",
+            keyVerses: [
+              { ref: "2:9", text: "Vous, au contraire, vous êtes une race élue, un sacerdoce royal, une nation sainte, un peuple acquis...", textNl: "Maar u bent een uitverkoren geslacht, een koninklijk priesterschap, een heilig volk, een volk dat God Zich tot Zijn eigendom maakte..." }
+            ]
+          },
+          { 
+            id: '2peter', 
+            name: '2 Pierre', nameNl: '2 Petrus',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 3, totalVerses: 61, author: 'Pierre', authorNl: 'Petrus', date: '65-68 ap. J.-C.', dateNl: '65-68 n.Chr.',
+            theme: 'La mise en garde contre les faux docteurs et la certitude de la parousie',
+            themeNl: 'Waarschuwing tegen dwaalleraars en de zekerheid van de wederkomst',
+            summaryFr: "Dans sa seconde lettre, Pierre met en garde contre les enseignants corrompus et les sceptiques qui se moquent de la promesse du retour du Christ, expliquant la patience de Dieu.",
+            summaryNl: "In zijn tweede brief waarschuwt Petrus voor corrupte leraren en sceptici die spotten met de belofte van de wederkomst van Christus, en legt Gods geduld uit.",
+            keyVerses: [
+              { ref: "3:9", text: "Le Seigneur ne tarde pas dans l'accomplissement de la promesse... mais il use de patience envers vous...", textNl: "De Heere vertraagt de belofte niet... maar Hij heeft geduld met ons..." }
+            ]
+          },
+          { 
+            id: '1john', 
+            name: '1 Jean', nameNl: '1 Johannes',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 5, totalVerses: 105, author: 'Jean', authorNl: 'Johannes', date: '85-90 ap. J.-C.', dateNl: '85-90 n.Chr.',
+            theme: 'La communion avec Dieu qui est Lumière, Amour et Vie',
+            themeNl: 'Gemeenschap met God die Licht, Liefde en Leven is',
+            summaryFr: "Jean écrit pour rassurer les croyants sur leur salut. Il pose l'amour fraternel comme le test ultime et indispensable de la connaissance véritable de Dieu.",
+            summaryNl: "Johannes schrijft om gelovigen te verzekeren van hun redding. Hij stelt broederlijke liefde als de ultieme en onmisbare test van ware kennis van God.",
+            keyVerses: [
+              { ref: "4:8", text: "Celui qui n'aime pas n'a pas connu Dieu, car Dieu est amour.", textNl: "Wie niet liefheeft, kent God niet, want God is liefde." }
+            ]
+          },
+          { 
+            id: '2john', 
+            name: '2 Jean', nameNl: '2 Johannes',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 1, totalVerses: 13, author: 'Jean', authorNl: 'Johannes', date: '85-90 ap. J.-C.', dateNl: '85-90 n.Chr.',
+            theme: 'Marcher dans la vérité et l’amour mutuel',
+            themeNl: 'Wandelen in de waarheid en wederzijdse liefde',
+            summaryFr: "Une très courte lettre adressée à 'l'Élus et à ses enfants'. Elle exhorte la communauté à continuer à marcher dans le commandement de l'amour tout en restant vigilante face aux imposteurs.",
+            summaryNl: "Een zeer korte brief gericht aan 'de uitverkoren vrouw en haar kinderen'. Het spoort de gemeenschap aan om te blijven wandelen in liefde en waakzaam te zijn voor bedriegers.",
+            keyVerses: [
+              { ref: "1:6", text: "Et l'amour consiste à marcher selon ses commandements...", textNl: "En dit is de liefde, dat wij wandelen naar Zijn geboden..." }
+            ]
+          },
+          { 
+            id: '3john', 
+            name: '3 Jean', nameNl: '3 Johannes',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 1, totalVerses: 14, author: 'Jean', authorNl: 'Johannes', date: '85-90 ap. J.-C.', dateNl: '85-90 n.Chr.',
+            theme: 'L’hospitalité chrétienne et le leadership ecclésial',
+            themeNl: 'Christelijke gastvrijheid en kerkelijk leiderschap',
+            summaryFr: "Jean félicite son ami Gaïus pour son hospitalité fidèle envers les frères missionnaires de passage, et dénonce l'attitude arrogante d'un certain Diotrèphe.",
+            summaryNl: "Johannes prijst zijn vriend Gajus voor zijn trouwe gastvrijheid aan rondreizende zendelingen en hekelt de arrogante houding van Diotrefes.",
+            keyVerses: [
+              { ref: "1:11", text: "Bien-aimé, n'imite pas le mal, mais le bien.", textNl: "Geliefde, volg het kwade niet na, maar het goede." }
+            ]
+          },
+          { 
+            id: 'jude', 
+            name: 'Jude', nameNl: 'Judas',
+            category: 'Épîtres Générales', categoryNl: 'Algemene brieven',
+            chapters: 1, totalVerses: 25, author: 'Jude', authorNl: 'Judas', date: '65-80 ap. J.-C.', dateNl: '65-80 n.Chr.',
+            theme: 'Combattre pour la foi transmise une fois pour toutes',
+            themeNl: 'Strijden voor het geloof dat eenmaal aan de heiligen is overgeleverd',
+            summaryFr: "Jude appelle ses lecteurs à défendre ardemment la foi chrétienne historique contre des intrus libertins et rebelles qui s'étaient glissés secrètement dans l'Église.",
+            summaryNl: "Judas roept zijn lezers op om vurig te strijden voor het historische christelijke geloof tegen wetteloze indringers die stiekem de gemeente waren binnengedrongen.",
+            keyVerses: [
+              { ref: "1:24", text: "Or, à celui qui peut vous préserver de toute chute...", textNl: "Aan Hem nu Die machtig is u voor struikelen te bewaren..." }
+            ]
+          },
+          { 
+            id: 'revelation', 
+            name: 'Apocalypse', nameNl: 'Openbaring',
+            category: 'Prophétie', categoryNl: 'Profetie',
+            chapters: 22, totalVerses: 404, author: 'Jean', authorNl: 'Johannes', date: '95-96 ap. J.-C.', dateNl: '95-96 n.Chr.',
+            theme: 'La victoire finale de Dieu et de l’Agneau sur le mal',
+            themeNl: 'De eindoverwinning van God en het Lam over het kwaad',
+            summaryFr: "Le livre de la révélation finale. À travers des visions grandioses et symboliques, Jean dévoile le triomphe ultime du Christ et de l'Église sur les forces du mal, aboutissant à la Nouvelle Jérusalem.",
+            summaryNl: "Het boek van de ultieme onthulling. Door middel van grootse en symbolische visioenen onthult Johannes de eindoverwinning van Christus en de Kerk, eindigend in het Nieuwe Jeruzalem.",
+            keyVerses: [
+              { ref: "21:4", text: "Il essuiera toute larme de leurs yeux, et la mort ne sera plus, et il n'y aura plus ni deuil, ni cri, ni douleur...", textNl: "En God zal alle tranen van hun ogen afwissen, en de dood zal er niet meer zijn; ook geen rouw, geen geklaag of moeite..." }
+            ]
+          }
+        ];
+
+        const LOCAL_VERSES = [
+          { 
+            book: 'john', bookName: 'Jean', bookNameNl: 'Johannes', chapter: 3, verse: 16, 
+            text: "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse point, mais qu'il ait la vie éternelle.", 
+            textNl: "Want zo lief heeft God de wereld gehad, dat Hij Zijn eniggeboren Zoon gegeven heeft, opdat ieder die in Hem gelooft, niet verloren gaat, maar eeuwig leven heeft.",
+            theme: "Amour divin et Salut", themeNl: "Goddelijke liefde en Redding" 
+          },
+          { 
+            book: 'romans', bookName: 'Romains', bookNameNl: 'Romeinen', chapter: 8, verse: 28, 
+            text: "Nous savons, du reste, que toutes choses concourent au bien de ceux qui aiment Dieu, de ceux qui sont appelés selon son dessein.", 
+            textNl: "En wij weten dat voor hen die God liefhebben, alle dingen meewerken ten goede, voor hen namelijk die overeenkomstig Zijn voornemen geroepen zijn.",
+            theme: "Providence et Souveraineté", themeNl: "Voorzienigheid en Soevereiniteit" 
+          },
+          { 
+            book: 'philippians', bookName: 'Philippiens', bookNameNl: 'Filippenzen', chapter: 4, verse: 13, 
+            text: "Je puis tout par celui qui me fortifie.", 
+            textNl: "Alle dingen kan ik aan door Christus, Die mij kracht geeft.",
+            theme: "Force et Persévérance", themeNl: "Kracht en Volharding" 
+          },
+          { 
+            book: 'matthew', bookName: 'Matthieu', bookNameNl: 'Matteüs', chapter: 6, verse: 33, 
+            text: "Cherchez premièrement le royaume et la justice de Dieu; et toutes ces choses vous seront données par-dessus.", 
+            textNl: "Maar zoek eerst het Koninkrijk van God en Zijn gerechtigheid, en al deze dingen zullen u erbij gegeven worden.",
+            theme: "Priorités et Confiance", themeNl: "Prioriteiten en Vertrouwen" 
+          }
+        ];
+
+        const QUIZ_QUESTIONS_FR = [
+          {
+            question: "Combien de chapitres compte l'intégralité du Nouveau Testament ?",
+            options: ["150 chapitres", "260 chapitres", "311 chapitres", "400 chapitres"],
+            answer: 1,
+            explanation: "Le Nouveau Testament compte exactement 260 chapitres répartis sur ses 27 livres, pour un total de 7 957 versets."
+          },
+          {
+            question: "Lequel de ces Évangiles s'ouvre par le prologue poétique sur le 'Verbe' (Logos) ?",
+            options: ["Matthieu", "Marc", "Luc", "Jean"],
+            answer: 3,
+            explanation: "C'est l'Évangile de Jean qui débute par la magnifique déclaration : 'Au commencement était la Parole, et la Parole était avec Dieu, et la Parole était Dieu' (Jean 1:1)."
+          }
+        ];
+
+        const QUIZ_QUESTIONS_NL = [
+          {
+            question: "Hoeveel hoofdstukken telt het gehele Nieuwe Testament?",
+            options: ["150 hoofdstukken", "260 hoofdstukken", "311 hoofdstukken", "400 hoofdstukken"],
+            answer: 1,
+            explanation: "Het Nieuwe Testament telt precies 260 hoofdstukken verdeeld over 27 boeken, met een totaal van 7.957 verzen."
+          },
+          {
+            question: "Welk van deze Evangeliën begint met de poëtische proloog over het 'Woord' (Logos)?",
+            options: ["Matteüs", "Marcus", "Lucas", "Johannes"],
+            answer: 3,
+            explanation: "Het is het Evangelie van Johannes dat begint met de prachtige verklaring: 'In het begin was het Woord, en het Woord was bij God, en het Woord was God' (Johannes 1:1)."
+          }
+        ];
+
+        const I18N = {
+          fr: {
+            subtitle: "Compagnon d'Étude des 7 957 Versets du Nouveau Testament",
+            home: "Accueil",
+            explorer: "Explorateur",
+            aiSearch: "Recherche Thématique",
+            quiz: "Quiz",
+            studyActive: "Étude active",
+            mainTitle: "Plongez dans les Écritures de la Nouvelle Alliance",
+            mainDesc: "Naviguez à travers l'histoire chrétienne primitive, explorez les résumés théologiques et étudiez les versets clés inspirants de chacun des 27 livres.",
+            startNav: "Commencer l'exploration",
+            randomVerse: "Verset aléatoire",
+            progress: "Votre Progression",
+            versetLus: "versets lus",
+            ofVerses: "/ 7 957 Versets",
+            wordOfDay: "PAROLE D'ESPÉRANCE",
+            recommendedTitle: "Versets Majeurs de Secours",
+            libTitle: "Bibliothèque du Nouveau Testament",
+            libDesc: "Sélectionnez un livre sacré pour voir son résumé et ses versets clés réels",
+            selectorTitle: "SÉLECTEUR DE LIVRE",
+            bookLabel: "Livre du Nouveau Testament",
+            chapLabel: "Chapitre",
+            verseLabel: "Verset",
+            versionLabel: "Version de la Bible",
+            aboutBook: "Détails du livre",
+            author: "Auteur",
+            date: "Date de rédaction",
+            theme: "Thème central",
+            summarySection: "Résumé & Essence du Livre",
+            keyPassagesSection: "Passages Clés Réels à Lire en Mode Autonome",
+            listenWord: "Écouter à haute voix",
+            listening: "Arrêter la lecture",
+            execommentary: "Analyse spirituelle",
+            greekContext: "Origine et contexte historique",
+            quizTitle: "Test de connaissances théologiques",
+            explanationTitle: "Explication :",
+            nextQuestion: "Question suivante",
+            restartBtn: "Recommencer",
+            backHome: "Retour à l'accueil"
+          },
+          nl: {
+            subtitle: "Studiepartner voor de 7.957 verzen van het Nieuwe Testament",
+            home: "Startpagina",
+            explorer: "Verkenner",
+            aiSearch: "Thema's zoeken",
+            quiz: "Quiz",
+            studyActive: "Actieve studie",
+            mainTitle: "Duik in de Schriften van het Nieuwe Verbond",
+            mainDesc: "Navigeer door de vroegchristelijke geschiedenis, verken de theologische samenvattingen en bestudeer de inspirerende verzen van elk van de 27 boeken.",
+            startNav: "Begin met verkennen",
+            randomVerse: "Willekeurig vers",
+            progress: "Uw Leesvoortgang",
+            versetLus: "verzen gelezen",
+            ofVerses: "/ 7.957 Verzen",
+            wordOfDay: "WOORD VAN HOOP",
+            recommendedTitle: "Aanbevolen verzen",
+            libTitle: "Bibliotheek van het Nieuwe Testament",
+            libDesc: "Klik op een boek om de samenvatting en de belangrijkste verzen te bekijken",
+            selectorTitle: "VERS SELECTOR",
+            bookLabel: "Boek van het Nieuwe Testament",
+            chapLabel: "Hoofdstuk",
+            verseLabel: "Vers",
+            versionLabel: "Bijbelvertaling",
+            aboutBook: "Over het boek",
+            author: "Auteur",
+            date: "Datum",
+            theme: "Hoofdthema",
+            summarySection: "Samenvatting van het Boek",
+            keyPassagesSection: "Belangrijke Echte Verzen om te Lezen",
+            listenWord: "Luister naar het Woord",
+            listening: "Stop met voorlezen",
+            execommentary: "Spirituele analyse",
+            greekContext: "Historische oorsprong",
+            quizTitle: "Theologische quiz",
+            explanationTitle: "Uitleg :",
+            nextQuestion: "Volgende vraag",
+            restartBtn: "Opnieuw starten",
+            backHome: "Terug naar startpagina"
+          }
+        };
+
+        function App() {
+          const [lang, setLang] = useState('fr');
+          const [activeTab, setActiveTab] = useState('dashboard');
+          const [selectedBook, setSelectedBook] = useState(NT_BOOKS[0]);
+          const [selectedChapter, setSelectedChapter] = useState(1);
+          const [selectedVerse, setSelectedVerse] = useState(1);
+          const [maxVersesInChapter, setMaxVersesInChapter] = useState(30);
+
+          const [currentVerseText, setCurrentVerseText] = useState("");
+          const [currentVerseTranslation, setCurrentVerseTranslation] = useState("Louis Segond (1910)");
+          const [theologicalCommentary, setTheologicalCommentary] = useState("");
+          const [greekContext, setGreekContext] = useState("");
+          const [favorites, setFavorites] = useState([]);
+          const [markedAsRead, setMarkedAsRead] = useState({});
+          const [readVersesCount, setReadVersesCount] = useState(0);
+
+          const [isSpeaking, setIsSpeaking] = useState(false);
+
+          // Quiz state
+          const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+          const [selectedOption, setSelectedOption] = useState(null);
+          const [quizScore, setQuizScore] = useState(0);
+          const [quizFinished, setQuizFinished] = useState(false);
+          const [showExplanation, setShowExplanation] = useState(false);
+
+          const t = I18N[lang];
+          const quizQuestions = lang === 'fr' ? QUIZ_QUESTIONS_FR : QUIZ_QUESTIONS_NL;
+
+          useEffect(() => {
+            if (lang === 'nl') {
+              setCurrentVerseTranslation("Herziene Statenvertaling");
+            } else {
+              setCurrentVerseTranslation("Louis Segond (1910)");
+            }
+          }, [lang]);
+
+          useEffect(() => {
+            // Charger les versets réels ou fallback
+            const matchingKeyVerse = selectedBook.keyVerses?.find(kv => kv.ref === `${selectedChapter}:${selectedVerse}`) || selectedBook.keyVerses?.[0];
+            if (matchingKeyVerse) {
+              setCurrentVerseText(lang === 'nl' ? matchingKeyVerse.textNl : matchingKeyVerse.text);
+              setTheologicalCommentary(lang === 'nl' ? `Dit is een sleutelpassage van het boek ${selectedBook.nameNl}.` : `C'est un passage majeur extrait du livre de ${selectedBook.name}.`);
+              setGreekContext(lang === 'nl' ? `Historische context: Geschreven in het Grieks van de eerste eeuw.` : `Écrit à l'origine en grec ancien (Koinè).`);
+            } else {
+              const fallback = LOCAL_VERSES[0];
+              setCurrentVerseText(lang === 'nl' ? fallback.textNl : fallback.text);
+              setTheologicalCommentary(lang === 'nl' ? `Jean 3:16 - Geliefde vers.` : `Jean 3:16 - Verset très aimé.`);
+            }
+          }, [selectedBook, selectedChapter, selectedVerse, lang]);
+
+          const speakVerseText = (textToSpeak) => {
+            if (isSpeaking) {
+              window.speechSynthesis.cancel();
+              setIsSpeaking(false);
+              return;
+            }
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = lang === 'nl' ? 'nl-NL' : 'fr-FR';
+            utterance.rate = 0.9;
+            utterance.onend = () => setIsSpeaking(false);
+            window.speechSynthesis.speak(utterance);
+            setIsSpeaking(true);
+          };
+
+          const handleAnswerSubmit = (optionIndex) => {
+            if (selectedOption !== null) return;
+            setSelectedOption(optionIndex);
+            setShowExplanation(true);
+            if (optionIndex === quizQuestions[currentQuizIndex].answer) {
+              setQuizScore(prev => prev + 1);
+            }
+          };
+
+          const nextQuizQuestion = () => {
+            setSelectedOption(null);
+            setShowExplanation(false);
+            if (currentQuizIndex + 1 < quizQuestions.length) {
+              setCurrentQuizIndex(prev => prev + 1);
+            } else {
+              setQuizFinished(true);
+            }
+          };
+
+          const toggleReadStatus = () => {
+            const verseKey = `${selectedBook.id}-${selectedChapter}-${selectedVerse}`;
+            const updated = { ...markedAsRead };
+            if (updated[verseKey]) {
+              delete updated[verseKey];
+            } else {
+              updated[verseKey] = true;
+            }
+            setMarkedAsRead(updated);
+            setReadVersesCount(Object.keys(updated).length);
+          };
+
+          const copyToClipboard = () => {
+            const fullText = `"${currentVerseText}" - ${selectedBook.name} ${selectedChapter}:${selectedVerse}`;
+            navigator.clipboard.writeText(fullText).then(() => {
+              alert("Copié dans le presse-papiers ! / Gekopieerd !");
+            });
+          };
+
+          return (
+            <div className="flex flex-col min-h-screen">
+              {/* HEADER */}
+              <header className="border-b border-stone-800 bg-stone-950/80 backdrop-blur sticky top-0 z-30 shadow-md">
+                <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-gradient-to-br from-amber-600 to-yellow-500 rounded-xl shadow-md">
+                      <span className="text-xl font-bold text-stone-950 font-serif-ancient">†</span>
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-amber-400 to-amber-200 bg-clip-text text-transparent font-serif-ancient">
+                        TESTAMENTUM
+                      </h1>
+                      <p className="text-[10px] text-stone-400 font-mono">
+                        {t.subtitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Navigation & Boutons langues */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center bg-stone-900 border border-stone-800 p-1 rounded-lg">
+                      <button 
+                        onClick={() => setLang('fr')} 
+                        className={`px-2.5 py-1 rounded text-xs font-bold transition ${lang === 'fr' ? 'bg-amber-600 text-stone-950' : 'text-stone-400'}`}
+                      >
+                        FR 🇫🇷
+                      </button>
+                      <button 
+                        onClick={() => setLang('nl')} 
+                        className={`px-2.5 py-1 rounded text-xs font-bold transition ${lang === 'nl' ? 'bg-amber-600 text-stone-950' : 'text-stone-400'}`}
+                      >
+                        NL 🇳🇱
+                      </button>
+                    </div>
+
+                    <nav className="flex items-center bg-stone-900/90 p-1 rounded-xl border border-stone-800/80">
+                      <button 
+                        onClick={() => setActiveTab('dashboard')} 
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'dashboard' ? 'bg-amber-600 text-stone-950 shadow-md font-bold' : 'text-stone-400 hover:text-stone-200'}`}
+                      >
+                        {t.home}
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('explorer')} 
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'explorer' ? 'bg-amber-600 text-stone-950 shadow-md font-bold' : 'text-stone-400 hover:text-stone-200'}`}
+                      >
+                        {t.explorer}
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('quiz')} 
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'quiz' ? 'bg-amber-600 text-stone-950 shadow-md font-bold' : 'text-stone-400 hover:text-stone-200'}`}
+                      >
+                        {t.quiz}
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </header>
+
+              {/* CONTENU PRINCIPAL */}
+              <main className="flex-grow max-w-7xl mx-auto px-4 py-6 w-full">
+                
+                {activeTab === 'dashboard' && (
+                  <div className="space-y-6">
+                    {/* Accueil */}
+                    <div className="relative overflow-hidden bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 rounded-2xl border border-stone-800 p-6 md:p-8 shadow-xl">
+                      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <div className="md:col-span-2 space-y-3">
+                          <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 rounded-full text-xs font-semibold tracking-wider uppercase border border-amber-500/20">
+                            {t.studyActive}
+                          </span>
+                          <h2 className="text-3xl font-serif font-bold text-amber-100">
+                            {t.mainTitle}
+                          </h2>
+                          <p className="text-stone-400 text-sm max-w-xl">
+                            {t.mainDesc}
+                          </p>
+                          <div className="flex flex-wrap gap-3 pt-2">
+                            <button 
+                              onClick={() => setActiveTab('explorer')}
+                              className="px-4 py-2 bg-amber-600 text-stone-950 rounded-xl font-bold text-xs hover:bg-amber-500 transition shadow-md flex items-center gap-2"
+                            >
+                              {t.startNav} →
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Progression */}
+                        <div className="bg-stone-900/80 border border-stone-800 p-5 rounded-xl space-y-4 shadow-inner">
+                          <span className="text-stone-400 text-xs font-semibold">{t.progress}</span>
+                          <div>
+                            <div className="flex justify-between items-end mb-1">
+                              <span className="text-2xl font-bold text-amber-400 font-mono">{readVersesCount}</span>
+                              <span className="text-xs text-stone-500 font-mono">{t.ofVerses}</span>
+                            </div>
+                            <div className="w-full bg-stone-800 h-2 rounded-full overflow-hidden">
+                              <div className="bg-gradient-to-r from-amber-600 to-yellow-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (readVersesCount / 7957) * 100)}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bibliothèque */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-serif font-bold text-amber-100">{t.libTitle}</h3>
+                        <p className="text-xs text-stone-400">{t.libDesc}</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {NT_BOOKS.map((book) => (
+                          <div 
+                            key={book.id}
+                            onClick={() => navigateToBook(book)}
+                            className="group bg-stone-950 hover:bg-stone-900 border border-stone-800 hover:border-amber-600/40 p-4 rounded-xl cursor-pointer transition duration-200 relative overflow-hidden"
+                          >
+                            <span className="text-[9px] text-stone-500 font-semibold uppercase block mb-1">
+                              {lang === 'nl' ? book.categoryNl : book.category}
+                            </span>
+                            <h4 className="font-serif font-bold text-stone-200 group-hover:text-amber-300 text-sm">
+                              {lang === 'nl' ? book.nameNl : book.name}
+                            </h4>
+                            <div className="mt-4 pt-2 border-t border-stone-900 flex items-center justify-between text-stone-500 text-[10px]">
+                              <span>{book.chapters} ch.</span>
+                              <span className="text-amber-500/80 font-bold">{book.totalVerses} v.</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* EXPLORATEUR DE LIVRES */}
+                {activeTab === 'explorer' && (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    {/* Colonne gauche de sélection */}
+                    <div className="lg:col-span-4 bg-stone-950 border border-stone-800 rounded-xl p-5 space-y-4">
+                      <h3 className="text-sm font-bold text-amber-400 font-serif border-b border-stone-800 pb-2">
+                        {t.selectorTitle}
+                      </h3>
+                      
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-stone-400 font-semibold block">{t.bookLabel}</label>
+                        <select 
+                          value={selectedBook.id}
+                          onChange={(e) => {
+                            const book = NT_BOOKS.find(b => b.id === e.target.value);
+                            setSelectedBook(book);
+                            setSelectedChapter(1);
+                            setSelectedVerse(1);
+                          }}
+                          className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-stone-200 text-sm focus:outline-none"
+                        >
+                          {NT_BOOKS.map(book => (
+                            <option key={book.id} value={book.id}>
+                              {lang === 'nl' ? book.nameNl : book.name} ({book.chapters} ch.)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-stone-400 font-semibold flex justify-between">
+                          <span>{t.chapLabel}</span>
+                          <span>Max: {selectedBook.chapters}</span>
+                        </label>
+                        <div className="flex gap-1.5 max-h-[120px] overflow-y-auto flex-wrap p-2 bg-stone-900 rounded-xl">
+                          {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((chap) => (
+                            <button
+                              key={chap}
+                              onClick={() => {
+                                setSelectedChapter(chap);
+                                setSelectedVerse(1);
+                              }}
+                              className={`w-8 h-8 rounded text-xs font-bold transition flex items-center justify-center ${selectedChapter === chap ? 'bg-amber-600 text-stone-950' : 'bg-stone-950 hover:bg-stone-800'}`}
+                            >
+                              {chap}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Métadonnées */}
+                      <div className="bg-stone-900/60 p-3.5 rounded-lg border border-stone-800/60 text-xs space-y-2">
+                        <span className="font-semibold text-amber-500 block">{t.aboutBook}</span>
+                        <p className="text-stone-400 leading-relaxed">
+                          <strong>{t.author} :</strong> {lang === 'nl' ? selectedBook.authorNl : selectedBook.author} <br />
+                          <strong>{t.date} :</strong> {lang === 'nl' ? selectedBook.dateNl : selectedBook.date} <br />
+                          <strong>{t.theme} :</strong> {lang === 'nl' ? selectedBook.themeNl : selectedBook.theme}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Zone de lecture de droite */}
+                    <div className="lg:col-span-8 flex flex-col gap-6">
+                      
+                      <div className="bg-stone-950 border border-stone-800 rounded-xl p-6 md:p-8 space-y-6 shadow-xl relative">
+                        <div className="flex items-center justify-between pb-4 border-b border-stone-900">
+                          <div>
+                            <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-full font-bold">
+                              {lang === 'nl' ? selectedBook.categoryNl : selectedBook.category}
+                            </span>
+                            <h2 className="text-2xl font-serif font-bold text-stone-100 mt-2">
+                              {lang === 'nl' ? selectedBook.nameNl : selectedBook.name} {selectedChapter}:{selectedVerse}
+                            </h2>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={toggleReadStatus} className="p-2 bg-stone-900 hover:bg-stone-800 rounded border border-stone-800">
+                              {markedAsRead[`${selectedBook.id}-${selectedChapter}-${selectedVerse}`] ? "✅ Lu" : "📖 Marquer lu"}
+                            </button>
+                            <button onClick={copyToClipboard} className="p-2 bg-stone-900 hover:bg-stone-800 rounded border border-stone-800">
+                              📋 Copier
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Le Texte principal */}
+                        <div className="py-6 text-center">
+                          <p className="text-xl md:text-2xl font-serif italic text-stone-100 leading-relaxed font-semibold">
+                            "{currentVerseText}"
+                          </p>
+                          <span className="text-xs text-stone-500 mt-4 block">
+                            {t.versionLabel} : {currentVerseTranslation}
+                          </span>
+                        </div>
+
+                        {/* Actions Vocales */}
+                        <div className="flex items-center justify-between pt-4 border-t border-stone-900 bg-stone-900/30 p-3 rounded-lg">
+                          <button 
+                            onClick={() => speakVerseText(currentVerseText)}
+                            className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-xs font-bold rounded-lg flex items-center gap-2"
+                          >
+                            🔊 {isSpeaking ? t.listening : t.listenWord}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Résumé Complet et Essence */}
+                      <div className="bg-stone-950 border border-stone-800 rounded-xl p-6 space-y-4">
+                        <h3 className="font-serif font-bold text-stone-100 text-base">{t.summarySection}</h3>
+                        <p className="text-xs text-stone-300 leading-relaxed italic bg-stone-900/40 p-4 rounded-xl">
+                          {lang === 'nl' ? selectedBook.summaryNl : selectedBook.summaryFr}
+                        </p>
+
+                        <div className="space-y-3 pt-2">
+                          <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.keyPassagesSection}</h4>
+                          <div className="space-y-3">
+                            {selectedBook.keyVerses?.map((kv, idx) => (
+                              <div key={idx} className="bg-stone-900/80 p-4 rounded-xl border border-stone-800 space-y-2">
+                                <div className="flex justify-between items-center text-[10px] font-mono text-stone-400">
+                                  <span>{lang === 'nl' ? selectedBook.nameNl : selectedBook.name} {kv.ref}</span>
+                                </div>
+                                <p className="text-stone-100 font-serif italic text-sm">
+                                  "{lang === 'nl' ? kv.textNl : kv.text}"
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+                )}
+
+                {/* TAB QUIZ */}
+                {activeTab === 'quiz' && (
+                  <div className="max-w-xl mx-auto bg-stone-950 border border-stone-800 rounded-xl p-6 shadow-xl">
+                    <h3 className="text-base font-serif font-bold text-amber-400 pb-4 border-b border-stone-900 uppercase">
+                      {t.quizTitle}
+                    </h3>
+
+                    {!quizFinished ? (
+                      <div className="space-y-6 pt-4">
+                        <div className="flex justify-between text-xs text-stone-400 font-mono">
+                          <span>Question {currentQuizIndex + 1} / {quizQuestions.length}</span>
+                          <span>Score : {quizScore}</span>
+                        </div>
+
+                        <h4 className="text-lg font-serif font-bold text-stone-100">
+                          {quizQuestions[currentQuizIndex].question}
+                        </h4>
+
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {quizQuestions[currentQuizIndex].options.map((option, idx) => {
+                            let btnStyle = "bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800/50";
+                            if (selectedOption !== null) {
+                              if (idx === quizQuestions[currentQuizIndex].answer) {
+                                btnStyle = "bg-green-500/10 border-green-500 text-green-400 font-bold";
+                              } else if (selectedOption === idx) {
+                                btnStyle = "bg-red-500/10 border-red-500 text-red-400";
+                              } else {
+                                btnStyle = "bg-stone-950 border-stone-900 text-stone-600";
+                              }
+                            }
+
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => handleAnswerSubmit(idx)}
+                                disabled={selectedOption !== null}
+                                className={`w-full text-left p-4 rounded-xl border text-sm transition ${btnStyle}`}
+                              >
+                                {option}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {showExplanation && (
+                          <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl space-y-2">
+                            <span className="text-xs text-amber-500 font-bold">{t.explanationTitle}</span>
+                            <p className="text-xs text-stone-300 leading-relaxed">
+                              {quizQuestions[currentQuizIndex].explanation}
+                            </p>
+                            <button 
+                              onClick={nextQuizQuestion}
+                              className="mt-3 w-full py-2 bg-stone-900 hover:bg-stone-800 text-amber-300 font-semibold rounded-lg text-xs"
+                            >
+                              {t.nextQuestion} →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 space-y-6">
+                        <h4 className="text-xl font-serif font-bold text-stone-100">Examen Complété !</h4>
+                        <p className="text-sm text-stone-400">Score Final : {quizScore} / {quizQuestions.length}</p>
+                        <button onClick={resetQuiz} className="px-6 py-2 bg-amber-600 text-stone-950 font-bold rounded-lg text-xs transition">
+                          {t.restartBtn}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </main>
+
+              {/* FOOTER */}
+              <footer className="border-t border-stone-800/60 bg-stone-950 py-6 mt-12 text-center text-xs text-stone-500 font-mono">
+                <p>© 2026 Testamentum. {t.footerText}</p>
+              </footer>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+</body>
+</html>
